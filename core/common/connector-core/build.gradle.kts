@@ -28,7 +28,7 @@ dependencies {
     implementation(project(":core:common:policy-engine"))
     implementation(project(":core:common:util"))
 
-    implementation(libs.dnsOverHttps)
+    implementation(libs.dnsoverhttps)
     implementation(libs.bouncyCastle.bcpkixJdk18on)
 
     testImplementation(project(":core:common:junit"))

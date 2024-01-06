@@ -15,7 +15,7 @@
  *
  */
 
-rootProject.name = "connector"
+rootProject.name = "edc-fork"
 
 // this is needed to have access to snapshot builds of plugins
 pluginManagement {
@@ -25,6 +25,7 @@ pluginManagement {
         }
         mavenCentral()
         gradlePluginPortal()
+        mavenLocal()
     }
 }
 
@@ -38,9 +39,7 @@ dependencyResolutionManagement {
     }
     versionCatalogs {
         create("libs") {
-            from("org.eclipse.edc:edc-versions:0.0.1-SNAPSHOT")
-            // this is not part of the published EDC Version Catalog, so we'll just "amend" it
-            library("dnsOverHttps", "com.squareup.okhttp3", "okhttp-dnsoverhttps").versionRef("okhttp")
+            from("org.eclipse.edc:edc-versions:0.0.1-milestone-8-basecamp")
         }
     }
 }

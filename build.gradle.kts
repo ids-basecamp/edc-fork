@@ -21,7 +21,6 @@ val javaVersion: String by project
 val edcScmConnection: String by project
 val edcWebsiteUrl: String by project
 val edcScmUrl: String by project
-val groupId: String by project
 val defaultVersion: String by project
 val annotationProcessorVersion: String by project
 val metaModelVersion: String by project
@@ -42,7 +41,7 @@ buildscript {
 }
 
 allprojects {
-    apply(plugin = "${groupId}.edc-build")
+    apply(plugin = "org.eclipse.edc.edc-build")
 
     // configure which version of the annotation processor to use. defaults to the same version as the plugin
     configure<org.eclipse.edc.plugins.autodoc.AutodocExtension> {
