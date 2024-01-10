@@ -21,10 +21,16 @@ rootProject.name = "edc-fork"
 pluginManagement {
     repositories {
         maven {
-            url = uri("https://oss.sonatype.org/content/repositories/snapshots/")
+            val user = providers.gradleProperty("gitHubUser")
+            val token = providers.gradleProperty("gitHubToken")
+            url = uri("https://maven.pkg.github.com/ids-basecamp/gradle-plugins-fork")
+            credentials {
+                username = user.orNull
+                password = token.orNull
+            }
         }
-        mavenCentral()
         gradlePluginPortal()
+        mavenCentral()
         mavenLocal()
     }
 }
@@ -32,14 +38,22 @@ pluginManagement {
 dependencyResolutionManagement {
     repositories {
         maven {
-            url = uri("https://oss.sonatype.org/content/repositories/snapshots/")
+            val user = providers.gradleProperty("gitHubUser")
+            val token = providers.gradleProperty("gitHubToken")
+            url = uri("https://maven.pkg.github.com/ids-basecamp/gradle-plugins-fork")
+            credentials {
+                username = user.orNull
+                password = token.orNull
+            }
         }
         mavenCentral()
         mavenLocal()
     }
     versionCatalogs {
+        val group = providers.gradleProperty("gradlePluginsGroup")
+        val version = providers.gradleProperty("gradlePluginsVersion")
         create("libs") {
-            from("org.eclipse.edc:edc-versions:0.0.1-milestone-8-basecamp")
+            from(group.orNull + ":edc-versions:" + version.orNull)
         }
     }
 }
