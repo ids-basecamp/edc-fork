@@ -30,7 +30,7 @@ jobs:
 
       - name: Publish to maven registry
         run: |
-            ./gradlew publish \
+            ./gradlew publishAllPublicationsToMavenRepository \
             -PartifactVersion=${VERSION} \
-            -Dorg.gradle.project.gitHubUser=${{ github.actor }} \
-            -Dorg.gradle.project.gitHubToken=${{ secrets.GITHUB_TOKEN }}
+            -Dorg.gradle.project.publishUserName=${{ github.actor }} \
+            -Dorg.gradle.project.publishUserPassword=${{ secrets.GITHUB_TOKEN }}
