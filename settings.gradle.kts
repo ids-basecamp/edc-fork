@@ -15,32 +15,45 @@
  *
  */
 
-rootProject.name = "connector"
+rootProject.name = "edc-fork"
 
 // this is needed to have access to snapshot builds of plugins
 pluginManagement {
     repositories {
         maven {
-            url = uri("https://oss.sonatype.org/content/repositories/snapshots/")
+            val user = providers.gradleProperty("publishUserName")
+            val token = providers.gradleProperty("publishUserPassword")
+            url = uri("https://maven.pkg.github.com/ids-basecamp/gradle-plugins-fork")
+            credentials {
+                username = user.orNull
+                password = token.orNull
+            }
         }
-        mavenCentral()
         gradlePluginPortal()
+        mavenCentral()
+        mavenLocal()
     }
 }
 
 dependencyResolutionManagement {
     repositories {
         maven {
-            url = uri("https://oss.sonatype.org/content/repositories/snapshots/")
+            val user = providers.gradleProperty("publishUserName")
+            val token = providers.gradleProperty("publishUserPassword")
+            url = uri("https://maven.pkg.github.com/ids-basecamp/gradle-plugins-fork")
+            credentials {
+                username = user.orNull
+                password = token.orNull
+            }
         }
         mavenCentral()
         mavenLocal()
     }
     versionCatalogs {
+        val group = providers.gradleProperty("gradlePluginsGroup")
+        val version = providers.gradleProperty("gradlePluginsVersion")
         create("libs") {
-            from("org.eclipse.edc:edc-versions:0.0.1-SNAPSHOT")
-            // this is not part of the published EDC Version Catalog, so we'll just "amend" it
-            library("dnsOverHttps", "com.squareup.okhttp3", "okhttp-dnsoverhttps").versionRef("okhttp")
+            from(group.orNull + ":edc-versions:" + version.orNull)
         }
     }
 }
