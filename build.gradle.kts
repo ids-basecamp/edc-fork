@@ -73,13 +73,13 @@ allprojects {
     }
 
     repositories {
-        val publishUserName: String? by project
-        val publishUserPassword: String? by project
+        val gitHubUserName: String? by project
+        val gitHubUserPassword: String? by project
         maven {
             url = uri("https://maven.pkg.github.com/ids-basecamp/ids-infomodel-java")
             credentials {
-                username = publishUserName
-                password = publishUserPassword
+                username = gitHubUserName
+                password = gitHubUserPassword
             }
         }
     }

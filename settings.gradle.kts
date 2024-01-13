@@ -21,8 +21,8 @@ rootProject.name = "edc-fork"
 pluginManagement {
     repositories {
         maven {
-            val user = providers.gradleProperty("publishUserName")
-            val token = providers.gradleProperty("publishUserPassword")
+            val user = providers.gradleProperty("gitHubUserName")
+            val token = providers.gradleProperty("gitHubUserName")
             url = uri("https://maven.pkg.github.com/ids-basecamp/gradle-plugins-fork")
             credentials {
                 username = user.orNull
@@ -38,8 +38,8 @@ pluginManagement {
 dependencyResolutionManagement {
     repositories {
         maven {
-            val user = providers.gradleProperty("publishUserName")
-            val token = providers.gradleProperty("publishUserPassword")
+            val user = providers.gradleProperty("gitHubUserName")
+            val token = providers.gradleProperty("gitHubUserName")
             url = uri("https://maven.pkg.github.com/ids-basecamp/gradle-plugins-fork")
             credentials {
                 username = user.orNull
