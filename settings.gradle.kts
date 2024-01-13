@@ -22,7 +22,7 @@ pluginManagement {
     repositories {
         maven {
             val user = providers.gradleProperty("gitHubUserName")
-            val token = providers.gradleProperty("gitHubUserName")
+            val token = providers.gradleProperty("gitHubUserPassword")
             url = uri("https://maven.pkg.github.com/ids-basecamp/gradle-plugins-fork")
             credentials {
                 username = user.orNull
@@ -39,7 +39,7 @@ dependencyResolutionManagement {
     repositories {
         maven {
             val user = providers.gradleProperty("gitHubUserName")
-            val token = providers.gradleProperty("gitHubUserName")
+            val token = providers.gradleProperty("gitHubUserPassword")
             url = uri("https://maven.pkg.github.com/ids-basecamp/gradle-plugins-fork")
             credentials {
                 username = user.orNull
