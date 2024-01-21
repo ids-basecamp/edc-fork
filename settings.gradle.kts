@@ -17,7 +17,6 @@
 
 rootProject.name = "edc-fork"
 
-// this is needed to have access to snapshot builds of plugins
 pluginManagement {
     repositories {
         maven {
@@ -53,7 +52,7 @@ dependencyResolutionManagement {
         val group = providers.gradleProperty("gradlePluginsGroup")
         val version = providers.gradleProperty("gradlePluginsVersion")
         create("libs") {
-            from(group.orNull + ":edc-versions:" + version.orNull)
+            from(group.get() + ":edc-versions:" + version.get())
         }
     }
 }
