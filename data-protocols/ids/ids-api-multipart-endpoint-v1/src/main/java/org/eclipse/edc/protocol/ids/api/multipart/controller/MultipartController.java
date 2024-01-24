@@ -50,7 +50,7 @@ public class MultipartController extends AbstractMultipartController {
                                @NotNull DynamicAttributeTokenService tokenService,
                                @NotNull List<Handler> multipartHandlers,
                                @NotNull String idsWebhookAddress) {
-            super(monitor, connectorId, objectMapper, tokenService, multipartHandlers, idsWebhookAddress);
+        super(monitor, connectorId, objectMapper, tokenService, multipartHandlers, idsWebhookAddress);
     }
 
     /**
