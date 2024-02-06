@@ -136,7 +136,7 @@ class MultipartControllerTest {
 
     private Message extractHeader(FormDataMultiPart multiPart) {
         var header = multiPart.getField("header");
-        var entity = (byte[]) header.getEntity();
+        var entity = (String) header.getEntity();
         try {
             return objectMapper.readValue(entity, Message.class);
         } catch (IOException e) {
