@@ -31,7 +31,7 @@ public class MultipartRequest {
     private final String payload;
     private final ClaimToken claimToken;
 
-    private MultipartRequest(@NotNull Message header, @Nullable String payload, ClaimToken claimToken) {
+    protected MultipartRequest(@NotNull Message header, @Nullable String payload, ClaimToken claimToken) {
         this.header = header;
         this.payload = payload;
         this.claimToken = claimToken;

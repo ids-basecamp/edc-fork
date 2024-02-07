@@ -117,9 +117,9 @@ public abstract class AbstractMultipartController {
                 .build();
     }
 
-    protected byte[] toJson(Object object) {
+    protected String toJson(Object object) {
         try {
-            return objectMapper.writeValueAsBytes(object);
+            return objectMapper.writeValueAsString(object);
         } catch (JsonProcessingException e) {
             throw new EdcException(e);
         }

@@ -35,4 +35,5 @@ public interface Handler {
      * @return {@link MultipartResponse}
      */
     @NotNull MultipartResponse handleRequest(@NotNull MultipartRequest multipartRequest);
+
 }

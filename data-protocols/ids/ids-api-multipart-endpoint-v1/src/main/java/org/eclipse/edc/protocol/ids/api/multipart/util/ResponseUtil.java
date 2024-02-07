@@ -354,6 +354,23 @@ public class ResponseUtil {
     }
 
     /**
+     * Creates a rejection message with reason parameter.
+     *
+     * @param reason the reason.
+     * @param correlationMessage the request.
+     * @param connectorId the connector ID.
+     * @return the rejection message.
+     */
+    @NotNull
+    public static RejectionMessage createRejectionMessage(@NotNull RejectionReason reason,
+                                                          @Nullable Message correlationMessage,
+                                                          @NotNull IdsId connectorId) {
+        return createRejectionMessageBuilder(correlationMessage, connectorId)
+                ._rejectionReason_(reason)
+                .build();
+    }
+
+    /**
      * Creates an ID for IDS messages.
      *
      * @return the ID.
