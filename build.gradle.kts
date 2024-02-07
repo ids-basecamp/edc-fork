@@ -28,8 +28,9 @@ if (actualVersion == "unspecified") {
 
 buildscript {
     dependencies {
+        val gradlePluginsGroup: String by project
         val gradlePluginsVersion: String by project
-        classpath("org.eclipse.edc.edc-build:org.eclipse.edc.edc-build.gradle.plugin:${gradlePluginsVersion}")
+        classpath("${gradlePluginsGroup}.edc-build:${gradlePluginsGroup}.edc-build.gradle.plugin:${gradlePluginsVersion}")
     }
 }
 
