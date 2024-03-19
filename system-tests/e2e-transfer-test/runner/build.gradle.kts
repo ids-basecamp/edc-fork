@@ -18,11 +18,13 @@ plugins {
 }
 
 dependencies {
+    testImplementation(project(":spi:common:catalog-spi"))
+    testImplementation(project(":spi:control-plane:policy-spi"))
+    testImplementation(project(":spi:control-plane:transfer-spi"))
+
     testImplementation(project(":extensions:common:sql:sql-core"))
 
     testImplementation(project(":core:common:junit"))
-    testImplementation(testFixtures(project(":extensions:common:azure:azure-test")))
-    testImplementation(testFixtures(project(":extensions:common:azure:azure-cosmos-core")))
     testImplementation(testFixtures(project(":extensions:common:sql:sql-core")))
     testImplementation(project(":core:common:junit"))
 
@@ -34,7 +36,6 @@ dependencies {
 
     testCompileOnly(project(":system-tests:e2e-transfer-test:backend-service"))
     testCompileOnly(project(":system-tests:e2e-transfer-test:control-plane"))
-    testCompileOnly(project(":system-tests:e2e-transfer-test:control-plane-cosmosdb"))
     testCompileOnly(project(":system-tests:e2e-transfer-test:control-plane-postgresql"))
     testCompileOnly(project(":system-tests:e2e-transfer-test:data-plane"))
 }

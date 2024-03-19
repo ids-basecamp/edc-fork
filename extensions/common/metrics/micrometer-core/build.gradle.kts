@@ -23,7 +23,6 @@ dependencies {
     api(libs.okhttp)
 
     testImplementation(project(":extensions:common:api:api-observability"))
-    testImplementation(testFixtures(project(":extensions:common:azure:azure-test")))
     testImplementation(project(":core:common:junit"))
 
     testRuntimeOnly(project(":extensions:common:http:jersey-micrometer"))
