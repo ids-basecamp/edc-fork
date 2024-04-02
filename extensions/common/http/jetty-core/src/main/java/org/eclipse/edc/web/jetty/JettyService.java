@@ -203,6 +203,7 @@ public class JettyService implements WebServer {
     @NotNull
     private HttpConnectionFactory httpConnectionFactory() {
         HttpConfiguration https = new HttpConfiguration();
+        https.setSendServerVersion(false);
         return new HttpConnectionFactory(https);
     }
 
