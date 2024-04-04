@@ -90,7 +90,7 @@ public class ContractNegotiationApiController implements ContractNegotiationApi 
                 .map(it -> transformerRegistry.transform(it, ContractNegotiationDto.class))
                 .filter(Result::succeeded)
                 .map(Result::getContent)
-                .orElseThrow(() -> new ObjectNotFoundException(ContractDefinition.class, id));
+                .orElseThrow(() -> new ObjectNotFoundException(ContractNegotiation.class, id));
     }
 
     @GET
@@ -101,7 +101,7 @@ public class ContractNegotiationApiController implements ContractNegotiationApi 
         return Optional.of(id)
                 .map(service::getState)
                 .map(NegotiationState::new)
-                .orElseThrow(() -> new ObjectNotFoundException(ContractDefinition.class, id));
+                .orElseThrow(() -> new ObjectNotFoundException(ContractNegotiation.class, id));
     }
 
     @GET
@@ -115,7 +115,7 @@ public class ContractNegotiationApiController implements ContractNegotiationApi 
                 .map(it -> transformerRegistry.transform(it, ContractAgreementDto.class))
                 .filter(Result::succeeded)
                 .map(Result::getContent)
-                .orElseThrow(() -> new ObjectNotFoundException(ContractDefinition.class, negotiationId));
+                .orElseThrow(() -> new ObjectNotFoundException(ContractNegotiation.class, negotiationId));
     }
 
     @POST
@@ -139,7 +139,7 @@ public class ContractNegotiationApiController implements ContractNegotiationApi 
     @Path("/{id}/cancel")
     @Override
     public void cancelNegotiation(@PathParam("id") String id) {
-        monitor.debug(format("Attempting to cancel contract definition with id %s", id));
+        monitor.debug(format("Attempting to cancel contract negotiation with id %s", id));
         var result = service.cancel(id).orElseThrow(exceptionMapper(ContractNegotiation.class, id));
         monitor.debug(format("Contract negotiation canceled %s", result.getId()));
     }
@@ -148,7 +148,7 @@ public class ContractNegotiationApiController implements ContractNegotiationApi 
     @Path("/{id}/decline")
     @Override
     public void declineNegotiation(@PathParam("id") String id) {
-        monitor.debug(format("Attempting to decline contract definition with id %s", id));
+        monitor.debug(format("Attempting to decline contract negotiation with id %s", id));
         var result = service.decline(id).orElseThrow(exceptionMapper(ContractNegotiation.class, id));
         monitor.debug(format("Contract negotiation declined %s", result.getId()));
     }
@@ -161,9 +161,9 @@ public class ContractNegotiationApiController implements ContractNegotiationApi 
 
         var spec = result.getContent();
 
-        monitor.debug(format("Get all contract definitions %s", spec));
+        monitor.debug(format("Get all contract negotiations %s", spec));
 
-        try (var stream = service.query(spec).orElseThrow(exceptionMapper(ContractDefinition.class, null))) {
+        try (var stream = service.query(spec).orElseThrow(exceptionMapper(ContractNegotiation.class, null))) {
             return stream
                     .map(it -> transformerRegistry.transform(it, ContractNegotiationDto.class))
                     .filter(Result::succeeded)
