@@ -43,6 +43,7 @@ public class HttpDataSource implements DataSource {
     private HttpPart getPart() {
         var request = params.toRequest();
         monitor.debug(() -> "HttpDataSource sends request: " + request.toString());
+        monitor.debug(() -> "Executing HTTP request: " + request.url());
         try (var response = httpClient.execute(request)) {
             var body = response.body();
             var stringBody = body != null ? body.string() : null;
