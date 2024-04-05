@@ -144,8 +144,7 @@ class ContractNegotiationApiControllerTest {
         assertThatThrownBy(() -> controller.getNegotiation("nonExistingId"))
                 .isInstanceOf(ObjectNotFoundException.class)
                 .hasMessage("Object of type ContractNegotiation with ID=nonExistingId was not found");
-
-         }
+    }
 
     @Test
     void getContractNegotiationState_found() {
@@ -163,7 +162,7 @@ class ContractNegotiationApiControllerTest {
         assertThatThrownBy(() -> controller.getNegotiationState("nonExistingId"))
                 .isInstanceOf(ObjectNotFoundException.class)
                 .hasMessage("Object of type ContractNegotiation with ID=nonExistingId was not found");
-        }
+    }
 
     @Test
     void getAgreementForNegotiation() {
