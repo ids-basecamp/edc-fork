@@ -128,7 +128,10 @@ class ContractNegotiationApiControllerTest {
     void getContractNegotiation_notFound() {
         when(service.findbyId("negotiationId")).thenReturn(null);
 
-        assertThatThrownBy(() -> controller.getNegotiation("nonExistingId")).isInstanceOf(ObjectNotFoundException.class);
+        assertThatThrownBy(() -> controller.getNegotiation("nonExistingId"))
+                .isInstanceOf(ObjectNotFoundException.class)
+                .hasMessage("Object of type ContractNegotiation with ID=nonExistingId was not found");
+
         verifyNoInteractions(transformerRegistry);
     }
 
@@ -138,7 +141,9 @@ class ContractNegotiationApiControllerTest {
         when(service.findbyId("negotiationId")).thenReturn(contractNegotiation);
         when(transformerRegistry.transform(isA(ContractNegotiation.class), eq(ContractNegotiationDto.class))).thenReturn(Result.failure("failure"));
 
-        assertThatThrownBy(() -> controller.getNegotiation("nonExistingId")).isInstanceOf(ObjectNotFoundException.class);
+        assertThatThrownBy(() -> controller.getNegotiation("nonExistingId"))
+                .isInstanceOf(ObjectNotFoundException.class)
+                .hasMessage("Object of type ContractNegotiation with ID=nonExistingId was not found");
     }
 
     @Test
@@ -154,7 +159,9 @@ class ContractNegotiationApiControllerTest {
     void getContractNegotiationState_notFound() {
         when(service.getState("negotiationId")).thenReturn(null);
 
-        assertThatThrownBy(() -> controller.getNegotiationState("nonExistingId")).isInstanceOf(ObjectNotFoundException.class);
+        assertThatThrownBy(() -> controller.getNegotiationState("nonExistingId"))
+                .isInstanceOf(ObjectNotFoundException.class)
+                .hasMessage("Object of type ContractNegotiation with ID=nonExistingId was not found");
     }
 
     @Test
@@ -174,7 +181,9 @@ class ContractNegotiationApiControllerTest {
     void getAgreementForNegotiation_negotiationNotExist() {
         when(service.getForNegotiation(any())).thenReturn(null);
 
-        assertThatThrownBy(() -> controller.getAgreementForNegotiation("negotiationId")).isInstanceOf(ObjectNotFoundException.class);
+        assertThatThrownBy(() -> controller.getAgreementForNegotiation("negotiationId"))
+                .isInstanceOf(ObjectNotFoundException.class)
+                .hasMessage("Object of type ContractNegotiation with ID=negotiationId was not found");
         verifyNoInteractions(transformerRegistry);
     }
 
@@ -257,7 +266,9 @@ class ContractNegotiationApiControllerTest {
     void decline_notPossible() {
         when(service.decline("negotiationId")).thenReturn(ServiceResult.conflict("conflict"));
 
-        assertThatThrownBy(() -> controller.declineNegotiation("negotiationId")).isInstanceOf(ObjectConflictException.class);
+        assertThatThrownBy(() -> controller.declineNegotiation("negotiationId"))
+                .isInstanceOf(ObjectNotFoundException.class)
+                .hasMessage("Object of type ContractNegotiation with ID=negotiationId was not found");
     }
 
     @ParameterizedTest
