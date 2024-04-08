@@ -779,7 +779,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthStatus'
+                type: array
+                items:
+                  $ref: '#/components/schemas/HealthStatus'
   /check/liveness:
     get:
       tags:
@@ -792,7 +794,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthStatus'
+                type: array
+                items:
+                  $ref: '#/components/schemas/HealthStatus'
   /check/readiness:
     get:
       tags:
@@ -805,7 +809,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthStatus'
+                type: array
+                items:
+                  $ref: '#/components/schemas/HealthStatus'
   /check/startup:
     get:
       tags:
@@ -818,7 +824,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthStatus'
+                type: array
+                items:
+                  $ref: '#/components/schemas/HealthStatus'
   /contractdefinitions:
     get:
       tags:
