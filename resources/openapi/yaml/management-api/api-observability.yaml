@@ -10,10 +10,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                example: null
-                items:
-                  $ref: '#/components/schemas/HealthStatus'
+                $ref: '#/components/schemas/HealthStatus'
       tags:
       - Application Observability
   /check/liveness:
@@ -26,10 +23,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                example: null
-                items:
-                  $ref: '#/components/schemas/HealthStatus'
+                $ref: '#/components/schemas/HealthStatus'
       tags:
       - Application Observability
   /check/readiness:
@@ -42,10 +36,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                example: null
-                items:
-                  $ref: '#/components/schemas/HealthStatus'
+                $ref: '#/components/schemas/HealthStatus'
       tags:
       - Application Observability
   /check/startup:
@@ -58,10 +49,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                example: null
-                items:
-                  $ref: '#/components/schemas/HealthStatus'
+                $ref: '#/components/schemas/HealthStatus'
       tags:
       - Application Observability
 components:
