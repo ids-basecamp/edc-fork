@@ -259,16 +259,16 @@ class ContractNegotiationApiControllerTest {
     void decline_notFound() {
         when(service.decline("negotiationId")).thenReturn(ServiceResult.notFound("not found"));
 
-        assertThatThrownBy(() -> controller.declineNegotiation("negotiationId")).isInstanceOf(ObjectNotFoundException.class);
+        assertThatThrownBy(() -> controller.declineNegotiation("negotiationId"))
+                .isInstanceOf(ObjectNotFoundException.class)
+                .hasMessage("Object of type ContractNegotiation with ID=negotiationId was not found");
     }
 
     @Test
     void decline_notPossible() {
         when(service.decline("negotiationId")).thenReturn(ServiceResult.conflict("conflict"));
 
-        assertThatThrownBy(() -> controller.declineNegotiation("negotiationId"))
-                .isInstanceOf(ObjectNotFoundException.class)
-                .hasMessage("Object of type ContractNegotiation with ID=negotiationId was not found");
+        assertThatThrownBy(() -> controller.declineNegotiation("negotiationId")).isInstanceOf(ObjectConflictException.class);
     }
 
     @ParameterizedTest
