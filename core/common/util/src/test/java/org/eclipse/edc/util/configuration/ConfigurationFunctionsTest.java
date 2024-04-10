@@ -56,7 +56,7 @@ class ConfigurationFunctionsTest {
     @SetSystemProperty(key = SYS_PROP_2, value = "")
     @SetSystemProperty(key = SYS_PROP_3, value = "    ")
     public void returnSystemProperty(String key, String expected) {
-        String resultValue = ConfigurationFunctions.propOrEnv(key, DEFAULT);
+        var resultValue = ConfigurationFunctions.propOrEnv(key, DEFAULT);
         assertThat(resultValue).isEqualTo(expected);
     }
 
@@ -66,13 +66,13 @@ class ConfigurationFunctionsTest {
     @SetEnvironmentVariable(key = EDC_VAR_3, value = "    ")
     @MethodSource("envVarsSource")
     public void returnEnv(String key, String expected) {
-        String resultValue = ConfigurationFunctions.propOrEnv(key, DEFAULT);
+        var resultValue = ConfigurationFunctions.propOrEnv(key, DEFAULT);
         assertThat(resultValue).isEqualTo(expected);
     }
 
     @Test
     public void returnDefaultEnv_NullValue() {
-        String resultValue = ConfigurationFunctions.propOrEnv("nonexistent", DEFAULT);
+        var resultValue = ConfigurationFunctions.propOrEnv("nonexistent", DEFAULT);
         assertThat(resultValue).isEqualTo(DEFAULT);
     }
 
