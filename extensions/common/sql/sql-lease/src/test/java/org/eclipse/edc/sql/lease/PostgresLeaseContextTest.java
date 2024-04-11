@@ -40,7 +40,14 @@ import javax.sql.DataSource;
 import static java.time.ZoneOffset.UTC;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.eclipse.edc.sql.SqlQueryExecutor.executeQuery;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 
 @PostgresqlDbIntegrationTest
 class PostgresLeaseContextTest extends LeaseContextTest {
