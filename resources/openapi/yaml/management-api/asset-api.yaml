@@ -38,6 +38,7 @@ paths:
           example: null
       responses:
         "200":
+          description: The assets matching the query
           content:
             application/json:
               schema:

@@ -101,6 +101,7 @@ paths:
               $ref: '#/components/schemas/QuerySpecDto'
       responses:
         "200":
+          description: The transfer process
           content:
             application/json:
               schema:
@@ -136,7 +137,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TransferProcessDto'
-          description: The transfer process
+          description: The transfer processes matching the query
         "400":
           content:
             application/json:

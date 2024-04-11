@@ -269,7 +269,6 @@ class ContractNegotiationApiControllerTest {
         when(service.decline("negotiationId")).thenReturn(ServiceResult.conflict("conflict"));
 
         assertThatThrownBy(() -> controller.declineNegotiation("negotiationId")).isInstanceOf(ObjectConflictException.class);
-
     }
 
     @ParameterizedTest

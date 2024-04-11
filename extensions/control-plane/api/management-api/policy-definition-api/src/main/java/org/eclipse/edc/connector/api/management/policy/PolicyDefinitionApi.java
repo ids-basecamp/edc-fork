@@ -36,7 +36,7 @@ public interface PolicyDefinitionApi {
 
     @Operation(description = "Returns all policy definitions according to a query",
             responses = {
-                    @ApiResponse(responseCode = "200", content = @Content(array = @ArraySchema(schema = @Schema(implementation = PolicyDefinitionResponseDto.class)))),
+                    @ApiResponse(responseCode = "200", description = "The policy definitions matching the query", content = @Content(array = @ArraySchema(schema = @Schema(implementation = PolicyDefinitionResponseDto.class)))),
                     @ApiResponse(responseCode = "400", description = "Request was malformed",
                             content = @Content(array = @ArraySchema(schema = @Schema(implementation = ApiErrorDetail.class)))) }
     )
@@ -44,7 +44,7 @@ public interface PolicyDefinitionApi {
 
     @Operation(description = "Returns all policy definitions according to a query",
             responses = {
-                    @ApiResponse(responseCode = "200", content = @Content(array = @ArraySchema(schema = @Schema(implementation = PolicyDefinitionResponseDto.class)))),
+                    @ApiResponse(responseCode = "200", description = "The policy definitions", content = @Content(array = @ArraySchema(schema = @Schema(implementation = PolicyDefinitionResponseDto.class)))),
                     @ApiResponse(responseCode = "400", description = "Request was malformed",
                             content = @Content(array = @ArraySchema(schema = @Schema(implementation = ApiErrorDetail.class)))) },
             deprecated = true
