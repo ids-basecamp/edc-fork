@@ -102,6 +102,7 @@ paths:
               $ref: '#/components/schemas/QuerySpecDto'
       responses:
         "200":
+          description: The contract negotiations that match the query
           content:
             application/json:
               schema:

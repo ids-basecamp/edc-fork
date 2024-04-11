@@ -38,7 +38,7 @@ import java.util.List;
 public interface TransferProcessApi {
     @Operation(description = "Returns all transfer process according to a query",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The transfer processes",
                             content = @Content(array = @ArraySchema(schema = @Schema(implementation = TransferProcessDto.class)))),
                     @ApiResponse(responseCode = "400", description = "Request was malformed",
                             content = @Content(array = @ArraySchema(schema = @Schema(implementation = ApiErrorDetail.class)))) }
@@ -47,7 +47,7 @@ public interface TransferProcessApi {
 
     @Operation(description = "Returns all transfer process according to a query",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The transfer process matching the query",
                             content = @Content(array = @ArraySchema(schema = @Schema(implementation = TransferProcessDto.class)))),
                     @ApiResponse(responseCode = "400", description = "Request was malformed",
                             content = @Content(array = @ArraySchema(schema = @Schema(implementation = ApiErrorDetail.class)))) },
@@ -58,7 +58,7 @@ public interface TransferProcessApi {
 
     @Operation(description = "Gets an transfer process with the given ID",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "The transfer process",
+                    @ApiResponse(responseCode = "200", description = "The transfer processes matching the query",
                             content = @Content(schema = @Schema(implementation = TransferProcessDto.class))),
                     @ApiResponse(responseCode = "400", description = "Request was malformed, e.g. id was null",
                             content = @Content(array = @ArraySchema(schema = @Schema(implementation = ApiErrorDetail.class)))),

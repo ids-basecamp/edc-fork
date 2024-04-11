@@ -104,6 +104,7 @@ paths:
               $ref: '#/components/schemas/QuerySpecDto'
       responses:
         "200":
+          description: The policy definitions matching the query
           content:
             application/json:
               schema:

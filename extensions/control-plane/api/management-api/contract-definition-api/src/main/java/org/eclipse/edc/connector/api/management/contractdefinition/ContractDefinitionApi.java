@@ -47,7 +47,7 @@ public interface ContractDefinitionApi {
 
     @Operation(description = "Returns all contract definitions according to a query",
             responses = {
-                    @ApiResponse(responseCode = "200",
+                    @ApiResponse(responseCode = "200", description = "The contract definitions matching the query",
                             content = @Content(array = @ArraySchema(schema = @Schema(implementation = ContractDefinitionResponseDto.class)))),
                     @ApiResponse(responseCode = "400", description = "Request was malformed",
                             content = @Content(array = @ArraySchema(schema = @Schema(implementation = ApiErrorDetail.class))))

@@ -7,13 +7,11 @@ paths:
       operationId: checkHealth
       responses:
         "200":
+          description: The runtime is working properly.
           content:
             application/json:
               schema:
-                type: array
-                example: null
-                items:
-                  $ref: '#/components/schemas/HealthStatus'
+                $ref: '#/components/schemas/HealthStatus'
       tags:
       - Application Observability
   /check/liveness:
@@ -23,13 +21,11 @@ paths:
       operationId: getLiveness
       responses:
         "200":
+          description: Runtime is working properly.
           content:
             application/json:
               schema:
-                type: array
-                example: null
-                items:
-                  $ref: '#/components/schemas/HealthStatus'
+                $ref: '#/components/schemas/HealthStatus'
       tags:
       - Application Observability
   /check/readiness:
@@ -39,13 +35,11 @@ paths:
       operationId: getReadiness
       responses:
         "200":
+          description: The runtime is able to accept requests.
           content:
             application/json:
               schema:
-                type: array
-                example: null
-                items:
-                  $ref: '#/components/schemas/HealthStatus'
+                $ref: '#/components/schemas/HealthStatus'
       tags:
       - Application Observability
   /check/startup:
@@ -55,13 +49,11 @@ paths:
       operationId: getStartup
       responses:
         "200":
+          description: The runtime has completed startup.
           content:
             application/json:
               schema:
-                type: array
-                example: null
-                items:
-                  $ref: '#/components/schemas/HealthStatus'
+                $ref: '#/components/schemas/HealthStatus'
       tags:
       - Application Observability
 components:
