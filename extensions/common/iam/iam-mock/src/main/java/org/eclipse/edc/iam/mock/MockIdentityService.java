@@ -31,9 +31,12 @@ public class MockIdentityService implements IdentityService {
     private final String region;
     private final TypeManager typeManager;
 
-    public MockIdentityService(TypeManager typeManager, String region) {
+    private final String clientId;
+
+    public MockIdentityService(TypeManager typeManager, String region, String clientId) {
         this.typeManager = typeManager;
         this.region = region;
+        this.clientId = clientId;
     }
 
     @Override
@@ -41,6 +44,7 @@ public class MockIdentityService implements IdentityService {
         var token = new MockToken();
         token.setAudience(parameters.getAudience());
         token.setRegion(region);
+        token.setClientId(clientId);
         TokenRepresentation tokenRepresentation = TokenRepresentation.Builder.newInstance()
                 .token(typeManager.writeValueAsString(token))
                 .build();
@@ -53,12 +57,16 @@ public class MockIdentityService implements IdentityService {
         if (!Objects.equals(token.audience, audience)) {
             return Result.failure(format("Mismatched audience: expected %s, got %s", audience, token.audience));
         }
-        return Result.success(ClaimToken.Builder.newInstance().claim("region", token.region).build());
+        return Result.success(ClaimToken.Builder.newInstance()
+                .claim("region", token.region)
+                .claim("client_id", token.clientId)
+                .build());
     }
 
     private static class MockToken {
         private String region;
         private String audience;
+        private String clientId;
 
         public String getAudience() {
             return audience;
@@ -75,5 +83,15 @@ public class MockIdentityService implements IdentityService {
         public void setRegion(String region) {
             this.region = region;
         }
+
+        public String getClientId() {
+            return clientId;
+        }
+
+        public void setClientId(String clientId) {
+            this.clientId = clientId;
+        }
     }
+
+
 }
