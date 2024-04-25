@@ -27,6 +27,7 @@ dependencies {
 
 
     testImplementation(libs.h2)
+    testImplementation(project(mapOf("path" to ":core:common:junit")))
     testFixturesImplementation(libs.postgres)
     testFixturesImplementation(libs.junit.jupiter.api)
     testFixturesImplementation(project(":spi:common:transaction-datasource-spi"))
