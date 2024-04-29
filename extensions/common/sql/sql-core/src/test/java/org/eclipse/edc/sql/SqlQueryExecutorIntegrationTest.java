@@ -15,110 +15,123 @@
 
 package org.eclipse.edc.sql;
 
-import org.eclipse.edc.junit.annotations.PostgresqlDbIntegrationTest;
 import org.eclipse.edc.spi.persistence.EdcPersistenceException;
-import org.eclipse.edc.sql.testfixtures.PostgresqlStoreSetupExtension;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.UUID;
 
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 
-@PostgresqlDbIntegrationTest
-@ExtendWith(PostgresqlStoreSetupExtension.class)
 public class SqlQueryExecutorIntegrationTest {
 
-    private final SqlQueryExecutor executor = new SqlQueryExecutor();
-    private final String table = "key_value";
+    private Connection connection;
 
     @BeforeEach
-    void setUp(Connection connection) {
-        executor.execute(connection,
-                format("CREATE TABLE %s (k VARCHAR(80) PRIMARY KEY NOT NULL," +
-                    " v VARCHAR(80) NOT NULL);", Objects.requireNonNull(table)));
+    void setUp() throws SQLException {
+        connection = DriverManager.getConnection("jdbc:h2:mem:test", new Properties());
     }
 
     @AfterEach
-    void tearDown(Connection connection) {
-        executor.execute(connection, format("DROP TABLE %s", table));
+    void tearDown() throws SQLException {
+        if (!connection.isClosed()) {
+            connection.rollback();
+            connection.close();
+        }
     }
 
     @Test
-    void executeQuery_doesNotCloseConnection(Connection connection) throws SQLException {
+    void executeQuery_doesNotCloseConnection() throws SQLException {
         ResultSetMapper<Long> mapper = (rs) -> rs.getLong(1);
         var sql = "SELECT 1;";
 
-        var result = executor.query(connection, false, mapper, sql);
+        var result = SqlQueryExecutor.executeQuery(connection, false, mapper, sql);
 
-        assertThat(result).isNotNull().hasSize(1).contains(1L);
-        verify(connection, never()).close();
+        assertThat(result).isNotNull().hasSize(1).contains(1L); // assert stream closes the stream
+        assertThat(connection.isClosed()).isFalse();
     }
 
     @Test
-    void executeQuery_closesConnection(Connection connection) throws SQLException {
+    void executeQuery_closesConnection() throws SQLException {
         ResultSetMapper<Long> mapper = (rs) -> rs.getLong(1);
         var sql = "SELECT 1;";
 
-        var result = executor.query(connection, true, mapper, sql);
+        var result = SqlQueryExecutor.executeQuery(connection, true, mapper, sql);
 
-        assertThat(result).isNotNull().hasSize(1).contains(1L);
-        verify(connection).close();
+        assertThat(result).isNotNull().hasSize(1).contains(1L); // assert stream closes the stream
+        assertThat(connection.isClosed()).isTrue();
     }
 
     @Test
-    void executeQuerySingle(Connection connection) {
-        var sql = "SELECT v FROM key_value WHERE k = ?";
-        var keyValue = insertRow(connection);
+    void executeQuerySingle() {
+        SqlQueryExecutor.executeQuery(connection, "CREATE TABLE test (data VARCHAR(80) primary key not null);");
+        SqlQueryExecutor.executeQuery(connection, "INSERT INTO test values ('value');");
+        var sql = "SELECT data FROM test WHERE data = ?";
         ResultSetMapper<String> mapper = rs -> rs.getString(1);
 
-        var found = executor.single(connection, false, mapper, sql, "value");
+        var found = SqlQueryExecutor.executeQuerySingle(connection, false, mapper, sql, "value");
         assertThat(found).isEqualTo("value");
 
-        var notFound = executor.single(connection, false, mapper, sql, "any other");
+        var notFound = SqlQueryExecutor.executeQuerySingle(connection, false, mapper, sql, "any other");
         assertThat(notFound).isEqualTo(null);
     }
 
     @Test
-    void testTransactionAndResultSetMapper(Connection connection) {
-        var keyValue = insertRow(connection);
+    void testTransactionAndResultSetMapper() {
+        var table = "kv_testTransactionAndResultSetMapper";
+        var kv = new Kv(UUID.randomUUID().toString(), UUID.randomUUID().toString());
 
-        var countResult = executor.query(connection, false, (rs) -> rs.getInt(1), format("SELECT COUNT(*) FROM %s", table));
+        SqlQueryExecutor.executeQuery(connection, getTableSchema(table));
+        SqlQueryExecutor.executeQuery(connection, format("INSERT INTO %s (k, v) values (?, ?)", table), kv.key, kv.value);
+
+        var countResult = SqlQueryExecutor.executeQuery(connection, false, (rs) -> rs.getInt(1), format("SELECT COUNT(*) FROM %s", table));
         assertThat(countResult).hasSize(1).first().isEqualTo(1);
 
-        var kvs = executor.query(connection, false, (rs) -> new KeyValue(rs.getString(1), rs.getString(2)), format("SELECT * FROM %s", table));
-        assertThat(kvs).hasSize(1).first().isEqualTo(keyValue);
+        var kvs = SqlQueryExecutor.executeQuery(connection, false, (rs) -> new Kv(rs.getString(1), rs.getString(2)), format("SELECT * FROM %s", table));
+        assertThat(kvs).hasSize(1).first().isEqualTo(kv);
     }
 
     @Test
-    void testInvalidSql(Connection connection) {
-        assertThatThrownBy(() -> executor.execute(connection, "Lorem ipsum dolor sit amet")).isInstanceOf(EdcPersistenceException.class);
+    void testInvalidSql() {
+        assertThatThrownBy(() -> SqlQueryExecutor.executeQuery(connection, "Lorem ipsum dolor sit amet")).isInstanceOf(EdcPersistenceException.class);
     }
 
-    @NotNull
-    private KeyValue insertRow(Connection connection) {
-        var keyValue = new KeyValue(UUID.randomUUID().toString(), UUID.randomUUID().toString());
-        executor.execute(connection, format("INSERT INTO %s (k, v) values (?, ?)", table), keyValue.key, keyValue.value);
-        return keyValue;
+    private String getTableSchema(String tableName) {
+        return format("" +
+                "CREATE TABLE %s (\n" +
+                "    k VARCHAR(80) PRIMARY KEY NOT NULL,\n" +
+                "    v VARCHAR(80) NOT NULL\n" +
+                ");", Objects.requireNonNull(tableName));
     }
 
-    private class KeyValue {
-        public String key;
-        public String value;
+    private static class Kv {
+        final String key;
+        final String value;
 
-        KeyValue(String key, String value) {
+        Kv(String key, String value) {
             this.key = key;
             this.value = value;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Kv kv = (Kv) o;
+            return key.equals(kv.key) && Objects.equals(value, kv.value);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(key, value);
         }
     }
 }

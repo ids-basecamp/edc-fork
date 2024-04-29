@@ -18,8 +18,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.edc.spi.persistence.EdcPersistenceException;
-import org.eclipse.edc.sql.QueryExecutor;
-import org.eclipse.edc.sql.SqlQueryExecutor;
 import org.eclipse.edc.transaction.datasource.spi.DataSourceRegistry;
 import org.eclipse.edc.transaction.spi.TransactionContext;
 
@@ -34,30 +32,15 @@ public abstract class AbstractSqlStore {
     protected final TransactionContext transactionContext;
     private final DataSourceRegistry dataSourceRegistry;
     private final String dataSourceName;
-    protected final QueryExecutor queryExecutor;
 
     private final ObjectMapper objectMapper;
 
-    /**
-     * Deprecated constructor
-     *
-     * @param dataSourceRegistry registry
-     * @param dataSourceName dataSourceName
-     * @param transactionContext transactionContext
-     * @param objectMapper objectMapper
-     * @deprecated please use {@link #AbstractSqlStore(DataSourceRegistry, String, TransactionContext, ObjectMapper, QueryExecutor)}
-     */
-    @Deprecated(since = "0.1.0")
-    public AbstractSqlStore(DataSourceRegistry dataSourceRegistry, String dataSourceName, TransactionContext transactionContext, ObjectMapper objectMapper) {
-        this(dataSourceRegistry, dataSourceName, transactionContext, objectMapper, new SqlQueryExecutor());
-    }
 
-    public AbstractSqlStore(DataSourceRegistry dataSourceRegistry, String dataSourceName, TransactionContext transactionContext, ObjectMapper objectMapper, QueryExecutor queryExecutor) {
+    public AbstractSqlStore(DataSourceRegistry dataSourceRegistry, String dataSourceName, TransactionContext transactionContext, ObjectMapper objectMapper) {
         this.dataSourceRegistry = Objects.requireNonNull(dataSourceRegistry);
         this.dataSourceName = Objects.requireNonNull(dataSourceName);
         this.transactionContext = Objects.requireNonNull(transactionContext);
         this.objectMapper = Objects.requireNonNull(objectMapper);
-        this.queryExecutor = queryExecutor;
     }
 
     protected Connection getConnection() throws SQLException {
