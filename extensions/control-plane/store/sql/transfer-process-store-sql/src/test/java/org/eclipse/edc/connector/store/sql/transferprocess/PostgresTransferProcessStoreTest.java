@@ -26,6 +26,7 @@ import org.eclipse.edc.spi.query.Criterion;
 import org.eclipse.edc.spi.query.QuerySpec;
 import org.eclipse.edc.spi.query.SortOrder;
 import org.eclipse.edc.spi.types.TypeManager;
+import org.eclipse.edc.sql.QueryExecutor;
 import org.eclipse.edc.sql.lease.testfixtures.LeaseUtil;
 import org.eclipse.edc.sql.testfixtures.PostgresqlStoreSetupExtension;
 import org.junit.jupiter.api.AfterEach;
@@ -59,21 +60,21 @@ class PostgresTransferProcessStoreTest extends TransferProcessStoreTestBase {
     private SqlTransferProcessStore store;
 
     @BeforeEach
-    void setUp(PostgresqlStoreSetupExtension extension) throws IOException, SQLException {
+    void setUp(PostgresqlStoreSetupExtension extension, QueryExecutor queryExecutor) throws IOException {
 
         var typeManager = new TypeManager();
         typeManager.registerTypes(TestFunctions.TestResourceDef.class, TestFunctions.TestProvisionedResource.class);
         typeManager.registerTypes(PolicyRegistrationTypes.TYPES.toArray(Class<?>[]::new));
 
         leaseUtil = new LeaseUtil(extension.getTransactionContext(), extension::getConnection, statements, clock);
-        store = new SqlTransferProcessStore(extension.getDataSourceRegistry(), extension.getDatasourceName(), extension.getTransactionContext(), typeManager.getMapper(), statements, "test-connector", clock);
+        store = new SqlTransferProcessStore(extension.getDataSourceRegistry(), extension.getDatasourceName(), extension.getTransactionContext(), typeManager.getMapper(), statements, "test-connector", clock, queryExecutor);
 
         var schema = Files.readString(Paths.get("./docs/schema.sql"));
         extension.runQuery(schema);
     }
 
     @AfterEach
-    void tearDown(PostgresqlStoreSetupExtension extension) throws SQLException {
+    void tearDown(PostgresqlStoreSetupExtension extension) {
         extension.runQuery("DROP TABLE " + statements.getTransferProcessTableName() + " CASCADE");
         extension.runQuery("DROP TABLE " + statements.getDataRequestTable() + " CASCADE");
         extension.runQuery("DROP TABLE " + statements.getLeaseTableName() + " CASCADE");

@@ -27,6 +27,7 @@ import org.eclipse.edc.spi.query.QuerySpec;
 import org.eclipse.edc.spi.types.domain.DataAddress;
 import org.eclipse.edc.spi.types.domain.asset.Asset;
 import org.eclipse.edc.spi.types.domain.asset.AssetEntry;
+import org.eclipse.edc.sql.QueryExecutor;
 import org.eclipse.edc.sql.store.AbstractSqlStore;
 import org.eclipse.edc.transaction.datasource.spi.DataSourceRegistry;
 import org.eclipse.edc.transaction.spi.TransactionContext;
@@ -41,15 +42,13 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toMap;
-import static org.eclipse.edc.sql.SqlQueryExecutor.executeQuery;
-import static org.eclipse.edc.sql.SqlQueryExecutor.executeQuerySingle;
 
 public class SqlAssetIndex extends AbstractSqlStore implements AssetIndex {
 
     private final AssetStatements assetStatements;
 
-    public SqlAssetIndex(DataSourceRegistry dataSourceRegistry, String dataSourceName, TransactionContext transactionContext, ObjectMapper objectMapper, AssetStatements assetStatements) {
-        super(dataSourceRegistry, dataSourceName, transactionContext, objectMapper);
+    public SqlAssetIndex(DataSourceRegistry dataSourceRegistry, String dataSourceName, TransactionContext transactionContext, ObjectMapper objectMapper, AssetStatements assetStatements, QueryExecutor queryExecutor) {
+        super(dataSourceRegistry, dataSourceName, transactionContext, objectMapper, queryExecutor);
         this.assetStatements = Objects.requireNonNull(assetStatements);
     }
 
@@ -73,7 +72,7 @@ public class SqlAssetIndex extends AbstractSqlStore implements AssetIndex {
             try {
                 var statement = assetStatements.createQuery(querySpec);
 
-                return executeQuery(getConnection(), true, this::mapAssetIds, statement.getQueryAsString(), statement.getParameters())
+                return queryExecutor.executeQuery(getConnection(), true, this::mapAssetIds, statement.getQueryAsString(), statement.getParameters())
                         .map(this::findById);
             } catch (SQLException e) {
                 throw new EdcPersistenceException(e);
@@ -95,8 +94,8 @@ public class SqlAssetIndex extends AbstractSqlStore implements AssetIndex {
                 var selectAssetByIdSql = assetStatements.getSelectAssetByIdTemplate();
                 var findPropertyByIdSql = assetStatements.getFindPropertyByIdTemplate();
                 try (
-                        var createdAtStream = executeQuery(connection, false, this::mapCreatedAt, selectAssetByIdSql, assetId);
-                        var propertiesStream = executeQuery(connection, false, this::mapPropertyResultSet, findPropertyByIdSql, assetId)
+                        var createdAtStream = queryExecutor.executeQuery(connection, false, this::mapCreatedAt, selectAssetByIdSql, assetId);
+                        var propertiesStream = queryExecutor.executeQuery(connection, false, this::mapPropertyResultSet, findPropertyByIdSql, assetId)
                 ) {
                     var createdAt = createdAtStream.findFirst().orElse(0L);
                     var assetProperties = propertiesStream
@@ -135,12 +134,12 @@ public class SqlAssetIndex extends AbstractSqlStore implements AssetIndex {
                     deleteById(assetId);
                 }
 
-                executeQuery(connection, assetStatements.getInsertAssetTemplate(), assetId, asset.getCreatedAt());
+                queryExecutor.executeQuery(connection, assetStatements.getInsertAssetTemplate(), assetId, asset.getCreatedAt());
                 var insertDataAddressTemplate = assetStatements.getInsertDataAddressTemplate();
-                executeQuery(connection, insertDataAddressTemplate, assetId, toJson(dataAddress.getProperties()));
+                queryExecutor.executeQuery(connection, insertDataAddressTemplate, assetId, toJson(dataAddress.getProperties()));
 
                 for (var property : asset.getProperties().entrySet()) {
-                    executeQuery(connection, assetStatements.getInsertPropertyTemplate(),
+                    queryExecutor.executeQuery(connection, assetStatements.getInsertPropertyTemplate(),
                             assetId,
                             property.getKey(),
                             toJson(property.getValue()),
@@ -164,7 +163,7 @@ public class SqlAssetIndex extends AbstractSqlStore implements AssetIndex {
                     return null;
                 }
 
-                executeQuery(connection, assetStatements.getDeleteAssetByIdTemplate(), assetId);
+                queryExecutor.executeQuery(connection, assetStatements.getDeleteAssetByIdTemplate(), assetId);
 
                 return asset;
             } catch (Exception e) {
@@ -180,7 +179,7 @@ public class SqlAssetIndex extends AbstractSqlStore implements AssetIndex {
 
             var queryAsString = statement.getQueryAsString().replace("SELECT * ", "SELECT COUNT (*) ");
 
-            return executeQuerySingle(connection, true, r -> r.getLong(1), queryAsString, statement.getParameters());
+            return queryExecutor.executeQuerySingle(connection, true, r -> r.getLong(1), queryAsString, statement.getParameters());
         } catch (SQLException e) {
             throw new EdcPersistenceException(e);
         }
@@ -193,7 +192,7 @@ public class SqlAssetIndex extends AbstractSqlStore implements AssetIndex {
         return transactionContext.execute(() -> {
             var sql = assetStatements.getFindDataAddressByIdTemplate();
             try {
-                return executeQuerySingle(getConnection(), true, this::mapDataAddress, sql, assetId);
+                return queryExecutor.executeQuerySingle(getConnection(), true, this::mapDataAddress, sql, assetId);
             } catch (Exception e) {
                 if (e instanceof EdcPersistenceException) {
                     throw (EdcPersistenceException) e;
@@ -235,7 +234,7 @@ public class SqlAssetIndex extends AbstractSqlStore implements AssetIndex {
 
     private boolean existsById(String assetId, Connection connection) {
         var sql = assetStatements.getCountAssetByIdClause();
-        try (var stream = executeQuery(connection, false, this::mapRowCount, sql, assetId)) {
+        try (var stream = queryExecutor.executeQuery(connection, false, this::mapRowCount, sql, assetId)) {
             return stream.findFirst().orElse(0) > 0;
         }
     }

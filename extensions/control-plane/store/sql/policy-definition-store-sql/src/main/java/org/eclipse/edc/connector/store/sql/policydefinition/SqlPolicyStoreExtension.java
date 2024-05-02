@@ -24,6 +24,7 @@ import org.eclipse.edc.runtime.metamodel.annotation.Provides;
 import org.eclipse.edc.runtime.metamodel.annotation.Setting;
 import org.eclipse.edc.spi.system.ServiceExtension;
 import org.eclipse.edc.spi.system.ServiceExtensionContext;
+import org.eclipse.edc.sql.QueryExecutor;
 import org.eclipse.edc.transaction.datasource.spi.DataSourceRegistry;
 import org.eclipse.edc.transaction.spi.TransactionContext;
 
@@ -40,13 +41,16 @@ public class SqlPolicyStoreExtension implements ServiceExtension {
     @Inject
     private TransactionContext transactionContext;
 
+    @Inject
+    private QueryExecutor queryExecutor;
+
     @Inject(required = false)
     private SqlPolicyStoreStatements statements;
 
     @Override
     public void initialize(ServiceExtensionContext context) {
 
-        var sqlPolicyStore = new SqlPolicyDefinitionStore(dataSourceRegistry, getDataSourceName(context), transactionContext, context.getTypeManager().getMapper(), getStatementImpl());
+        var sqlPolicyStore = new SqlPolicyDefinitionStore(dataSourceRegistry, getDataSourceName(context), transactionContext, context.getTypeManager().getMapper(), getStatementImpl(), queryExecutor);
 
         context.registerService(PolicyDefinitionStore.class, sqlPolicyStore);
     }

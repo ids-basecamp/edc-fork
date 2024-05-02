@@ -14,6 +14,7 @@
 
 package org.eclipse.edc.sql.lease;
 
+import org.eclipse.edc.sql.QueryExecutor;
 import org.eclipse.edc.transaction.spi.TransactionContext;
 
 import java.sql.Connection;
@@ -45,19 +46,21 @@ public class SqlLeaseContextBuilder {
     private final Clock clock;
     private String leaseHolder;
     private Duration leaseDuration;
+    private final QueryExecutor queryExecutor;
 
-    private SqlLeaseContextBuilder(TransactionContext trxContext, LeaseStatements statements, String leaseHolder, Clock clock) {
+    private SqlLeaseContextBuilder(TransactionContext trxContext, LeaseStatements statements, String leaseHolder, Clock clock, QueryExecutor queryExecutor) {
         this.trxContext = trxContext;
         this.statements = statements;
         this.leaseHolder = leaseHolder;
         this.clock = clock;
+        this.queryExecutor = queryExecutor;
     }
 
-    public static SqlLeaseContextBuilder with(TransactionContext trxContext, String leaseHolder, LeaseStatements statements, Clock clock) {
+    public static SqlLeaseContextBuilder with(TransactionContext trxContext, String leaseHolder, LeaseStatements statements, Clock clock, QueryExecutor queryExecutor) {
         Objects.requireNonNull(trxContext, "trxContext");
         Objects.requireNonNull(leaseHolder, "leaseHolder");
         Objects.requireNonNull(statements, "statements");
-        return new SqlLeaseContextBuilder(trxContext, statements, leaseHolder, clock);
+        return new SqlLeaseContextBuilder(trxContext, statements, leaseHolder, clock, queryExecutor);
     }
 
     /**
@@ -82,6 +85,6 @@ public class SqlLeaseContextBuilder {
      */
     public SqlLeaseContext withConnection(Connection connection) {
         Objects.requireNonNull(connection, "connection");
-        return new SqlLeaseContext(trxContext, statements, leaseHolder, clock, leaseDuration, connection);
+        return new SqlLeaseContext(trxContext, statements, leaseHolder, clock, leaseDuration, connection, queryExecutor);
     }
 }

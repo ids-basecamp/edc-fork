@@ -24,6 +24,7 @@ import org.eclipse.edc.connector.store.sql.contractnegotiation.store.schema.Cont
 import org.eclipse.edc.spi.persistence.EdcPersistenceException;
 import org.eclipse.edc.spi.query.Criterion;
 import org.eclipse.edc.spi.query.QuerySpec;
+import org.eclipse.edc.sql.QueryExecutor;
 import org.eclipse.edc.sql.lease.SqlLeaseContextBuilder;
 import org.eclipse.edc.sql.store.AbstractSqlStore;
 import org.eclipse.edc.transaction.datasource.spi.DataSourceRegistry;
@@ -41,8 +42,6 @@ import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
-import static org.eclipse.edc.sql.SqlQueryExecutor.executeQuery;
-import static org.eclipse.edc.sql.SqlQueryExecutor.executeQuerySingle;
 
 /**
  * SQL-based implementation of the {@link ContractNegotiationStore}
@@ -54,11 +53,12 @@ public class SqlContractNegotiationStore extends AbstractSqlStore implements Con
     private final SqlLeaseContextBuilder leaseContext;
     private final Clock clock;
 
-    public SqlContractNegotiationStore(DataSourceRegistry dataSourceRegistry, String dataSourceName, TransactionContext transactionContext, ObjectMapper objectMapper, ContractNegotiationStatements statements, String connectorId, Clock clock) {
-        super(dataSourceRegistry, dataSourceName, transactionContext, objectMapper);
+    public SqlContractNegotiationStore(DataSourceRegistry dataSourceRegistry, String dataSourceName, TransactionContext transactionContext, ObjectMapper objectMapper, ContractNegotiationStatements statements, String connectorId, Clock clock,
+                                       QueryExecutor queryExecutor) {
+        super(dataSourceRegistry, dataSourceName, transactionContext, objectMapper, queryExecutor);
         this.statements = statements;
         this.clock = clock;
-        leaseContext = SqlLeaseContextBuilder.with(transactionContext, connectorId, statements, clock);
+        leaseContext = SqlLeaseContextBuilder.with(transactionContext, connectorId, statements, clock, queryExecutor);
     }
 
     @Override
@@ -88,7 +88,7 @@ public class SqlContractNegotiationStore extends AbstractSqlStore implements Con
         return transactionContext.execute(() -> {
             var stmt = statements.getFindContractAgreementTemplate();
             try {
-                return executeQuerySingle(getConnection(), true, this::mapContractAgreement, stmt, contractId);
+                return queryExecutor.executeQuerySingle(getConnection(), true, this::mapContractAgreement, stmt, contractId);
             } catch (SQLException e) {
                 throw new EdcPersistenceException(e);
             }
@@ -130,7 +130,7 @@ public class SqlContractNegotiationStore extends AbstractSqlStore implements Con
                     leaseContext.withConnection(connection).acquireLease(negotiationId);
 
                     var stmt = statements.getDeleteTemplate();
-                    executeQuery(connection, stmt, negotiationId);
+                    queryExecutor.executeQuery(connection, stmt, negotiationId);
 
                     //necessary to delete the row in edc_lease
                     leaseContext.withConnection(connection).breakLease(negotiationId);
@@ -148,7 +148,7 @@ public class SqlContractNegotiationStore extends AbstractSqlStore implements Con
         return transactionContext.execute(() -> {
             try {
                 var statement = statements.createNegotiationsQuery(querySpec);
-                return executeQuery(getConnection(), true, this::mapContractNegotiation, statement.getQueryAsString(), statement.getParameters());
+                return queryExecutor.executeQuery(getConnection(), true, this::mapContractNegotiation, statement.getQueryAsString(), statement.getParameters());
             } catch (SQLException e) {
                 throw new EdcPersistenceException(e);
             }
@@ -160,7 +160,7 @@ public class SqlContractNegotiationStore extends AbstractSqlStore implements Con
         return transactionContext.execute(() -> {
             try {
                 var statement = statements.createAgreementsQuery(querySpec);
-                return executeQuery(getConnection(), true, this::mapContractAgreement, statement.getQueryAsString(), statement.getParameters());
+                return queryExecutor.executeQuery(getConnection(), true, this::mapContractAgreement, statement.getQueryAsString(), statement.getParameters());
             } catch (SQLException e) {
                 throw new EdcPersistenceException(e);
             }
@@ -173,7 +173,7 @@ public class SqlContractNegotiationStore extends AbstractSqlStore implements Con
             var stmt = statements.getNextForStateTemplate();
             try (
                     var connection = getConnection();
-                    var stream = executeQuery(connection, true, this::mapContractNegotiation, stmt, state, clock.millis(), max)
+                    var stream = queryExecutor.executeQuery(connection, true, this::mapContractNegotiation, stmt, state, clock.millis(), max)
             ) {
                 var negotiations = stream.collect(Collectors.toList());
                 negotiations.forEach(cn -> leaseContext.withConnection(connection).acquireLease(cn.getId()));
@@ -186,7 +186,7 @@ public class SqlContractNegotiationStore extends AbstractSqlStore implements Con
 
     private @Nullable ContractNegotiation findInternal(Connection connection, String id) {
         var sql = statements.getFindTemplate();
-        return executeQuerySingle(connection, false, this::mapContractNegotiation, sql, id);
+        return queryExecutor.executeQuerySingle(connection, false, this::mapContractNegotiation, sql, id);
     }
 
     private void update(Connection connection, String negotiationId, ContractNegotiation updatedValues) {
@@ -196,7 +196,7 @@ public class SqlContractNegotiationStore extends AbstractSqlStore implements Con
             upsertAgreement(updatedValues.getContractAgreement());
         }
 
-        executeQuery(connection, stmt,
+        queryExecutor.executeQuery(connection, stmt,
                 updatedValues.getState(),
                 updatedValues.getStateCount(),
                 updatedValues.getStateTimestamp(),
@@ -218,7 +218,7 @@ public class SqlContractNegotiationStore extends AbstractSqlStore implements Con
         }
 
         var stmt = statements.getInsertNegotiationTemplate();
-        executeQuery(connection, stmt, negotiation.getId(),
+        queryExecutor.executeQuery(connection, stmt, negotiation.getId(),
                 negotiation.getCorrelationId(),
                 negotiation.getCounterPartyId(),
                 negotiation.getCounterPartyAddress(),
@@ -245,7 +245,7 @@ public class SqlContractNegotiationStore extends AbstractSqlStore implements Con
                 if (findContractAgreement(agrId) == null) {
                     // insert agreement
                     var sql = statements.getInsertAgreementTemplate();
-                    executeQuery(connection, sql, contractAgreement.getId(),
+                    queryExecutor.executeQuery(connection, sql, contractAgreement.getId(),
                             contractAgreement.getProviderAgentId(),
                             contractAgreement.getConsumerAgentId(),
                             contractAgreement.getContractSigningDate(),
@@ -257,7 +257,7 @@ public class SqlContractNegotiationStore extends AbstractSqlStore implements Con
                 } else {
                     // update agreement
                     var query = statements.getUpdateAgreementTemplate();
-                    executeQuery(connection, query, contractAgreement.getProviderAgentId(),
+                    queryExecutor.executeQuery(connection, query, contractAgreement.getProviderAgentId(),
                             contractAgreement.getConsumerAgentId(),
                             contractAgreement.getContractSigningDate(),
                             contractAgreement.getContractStartDate(),

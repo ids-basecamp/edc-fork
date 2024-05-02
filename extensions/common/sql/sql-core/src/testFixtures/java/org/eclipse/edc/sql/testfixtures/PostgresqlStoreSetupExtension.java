@@ -14,6 +14,8 @@
 
 package org.eclipse.edc.sql.testfixtures;
 
+import org.eclipse.edc.sql.QueryExecutor;
+import org.eclipse.edc.sql.SqlQueryExecutor;
 import org.eclipse.edc.transaction.datasource.spi.DataSourceRegistry;
 import org.eclipse.edc.transaction.spi.NoopTransactionContext;
 import org.eclipse.edc.transaction.spi.TransactionContext;
@@ -29,7 +31,6 @@ import java.sql.Connection;
 import java.util.UUID;
 import javax.sql.DataSource;
 
-import static org.eclipse.edc.sql.SqlQueryExecutor.executeQuery;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
@@ -48,6 +49,7 @@ public class PostgresqlStoreSetupExtension implements BeforeEachCallback, AfterE
     private DataSource dataSource = null;
     private Connection connection = null;
     private TransactionContext transactionContext = null;
+    private final QueryExecutor queryExecutor = new SqlQueryExecutor();
 
     public PostgresqlStoreSetupExtension(String datasourceName) {
         this.datasourceName = datasourceName;
@@ -71,7 +73,7 @@ public class PostgresqlStoreSetupExtension implements BeforeEachCallback, AfterE
     }
 
     public int runQuery(String query) {
-        return transactionContext.execute(() -> executeQuery(connection, query));
+        return transactionContext.execute(() -> queryExecutor.executeQuery(connection, query));
     }
 
 
@@ -102,7 +104,7 @@ public class PostgresqlStoreSetupExtension implements BeforeEachCallback, AfterE
     }
 
     @Override
-    public void beforeAll(ExtensionContext context) throws Exception {
+    public void beforeAll(ExtensionContext context) {
         PostgresqlLocalInstance.createTestDatabase();
     }
 

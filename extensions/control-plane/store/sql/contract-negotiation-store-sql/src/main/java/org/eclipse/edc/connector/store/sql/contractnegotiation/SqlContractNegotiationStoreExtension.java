@@ -23,6 +23,7 @@ import org.eclipse.edc.runtime.metamodel.annotation.Inject;
 import org.eclipse.edc.runtime.metamodel.annotation.Provides;
 import org.eclipse.edc.spi.system.ServiceExtension;
 import org.eclipse.edc.spi.system.ServiceExtensionContext;
+import org.eclipse.edc.sql.QueryExecutor;
 import org.eclipse.edc.transaction.datasource.spi.DataSourceRegistry;
 import org.eclipse.edc.transaction.spi.TransactionContext;
 
@@ -42,6 +43,9 @@ public class SqlContractNegotiationStoreExtension implements ServiceExtension {
     private TransactionContext trxContext;
 
     @Inject
+    private QueryExecutor queryExecutor;
+
+    @Inject
     private Clock clock;
 
     @Inject(required = false)
@@ -49,7 +53,7 @@ public class SqlContractNegotiationStoreExtension implements ServiceExtension {
 
     @Override
     public void initialize(ServiceExtensionContext context) {
-        var sqlStore = new SqlContractNegotiationStore(dataSourceRegistry, getDataSourceName(context), trxContext, context.getTypeManager().getMapper(), getStatementImpl(), context.getConnectorId(), clock);
+        var sqlStore = new SqlContractNegotiationStore(dataSourceRegistry, getDataSourceName(context), trxContext, context.getTypeManager().getMapper(), getStatementImpl(), context.getConnectorId(), clock, queryExecutor);
         context.registerService(ContractNegotiationStore.class, sqlStore);
     }
 

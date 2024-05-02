@@ -27,6 +27,7 @@ import org.eclipse.edc.policy.model.Policy;
 import org.eclipse.edc.policy.model.PolicyRegistrationTypes;
 import org.eclipse.edc.spi.query.QuerySpec;
 import org.eclipse.edc.spi.types.TypeManager;
+import org.eclipse.edc.sql.QueryExecutor;
 import org.eclipse.edc.sql.lease.testfixtures.LeaseUtil;
 import org.eclipse.edc.sql.testfixtures.PostgresqlStoreSetupExtension;
 import org.junit.jupiter.api.AfterEach;
@@ -37,7 +38,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.sql.SQLException;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.UUID;
@@ -62,13 +62,13 @@ class PostgresContractNegotiationStoreTest extends ContractNegotiationStoreTestB
     private LeaseUtil leaseUtil;
 
     @BeforeEach
-    void setUp(PostgresqlStoreSetupExtension extension) throws SQLException, IOException {
+    void setUp(PostgresqlStoreSetupExtension extension, QueryExecutor queryExecutor) throws IOException {
 
         var statements = new PostgresDialectStatements();
         TypeManager manager = new TypeManager();
 
         manager.registerTypes(PolicyRegistrationTypes.TYPES.toArray(Class<?>[]::new));
-        store = new SqlContractNegotiationStore(extension.getDataSourceRegistry(), extension.getDatasourceName(), extension.getTransactionContext(), manager.getMapper(), statements, CONNECTOR_NAME, Clock.systemUTC());
+        store = new SqlContractNegotiationStore(extension.getDataSourceRegistry(), extension.getDatasourceName(), extension.getTransactionContext(), manager.getMapper(), statements, CONNECTOR_NAME, Clock.systemUTC(), queryExecutor);
 
         var schema = Files.readString(Paths.get("./docs/schema.sql"));
         extension.runQuery(schema);
@@ -76,7 +76,7 @@ class PostgresContractNegotiationStoreTest extends ContractNegotiationStoreTestB
     }
 
     @AfterEach
-    void tearDown(PostgresqlStoreSetupExtension extension) throws Exception {
+    void tearDown(PostgresqlStoreSetupExtension extension) {
         var dialect = new PostgresDialectStatements();
         extension.runQuery("DROP TABLE " + dialect.getContractNegotiationTable() + " CASCADE");
         extension.runQuery("DROP TABLE " + dialect.getContractAgreementTable() + " CASCADE");
