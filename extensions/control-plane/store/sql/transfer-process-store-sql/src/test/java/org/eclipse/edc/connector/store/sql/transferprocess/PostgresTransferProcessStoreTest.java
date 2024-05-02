@@ -37,7 +37,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.sql.SQLException;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.List;
