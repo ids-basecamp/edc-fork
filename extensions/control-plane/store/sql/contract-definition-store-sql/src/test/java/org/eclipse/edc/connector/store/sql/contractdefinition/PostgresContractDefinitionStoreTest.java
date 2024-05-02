@@ -26,6 +26,7 @@ import org.eclipse.edc.spi.query.Criterion;
 import org.eclipse.edc.spi.query.QuerySpec;
 import org.eclipse.edc.spi.query.SortOrder;
 import org.eclipse.edc.spi.types.TypeManager;
+import org.eclipse.edc.sql.QueryExecutor;
 import org.eclipse.edc.sql.testfixtures.PostgresqlStoreSetupExtension;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,7 +43,6 @@ import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.eclipse.edc.sql.SqlQueryExecutor.executeQuery;
 
 @PostgresqlDbIntegrationTest
 @ExtendWith(PostgresqlStoreSetupExtension.class)
@@ -54,27 +54,27 @@ class PostgresContractDefinitionStoreTest extends ContractDefinitionStoreTestBas
     private SqlContractDefinitionStore sqlContractDefinitionStore;
 
     @BeforeEach
-    void setUp(PostgresqlStoreSetupExtension extension) throws IOException, SQLException {
+    void setUp(PostgresqlStoreSetupExtension extension, QueryExecutor queryExecutor) throws IOException {
 
         var typeManager = new TypeManager();
         typeManager.registerTypes(PolicyRegistrationTypes.TYPES.toArray(Class<?>[]::new));
 
-        sqlContractDefinitionStore = new SqlContractDefinitionStore(extension.getDataSourceRegistry(), extension.getDatasourceName(), extension.getTransactionContext(), statements, typeManager.getMapper());
+        sqlContractDefinitionStore = new SqlContractDefinitionStore(extension.getDataSourceRegistry(), extension.getDatasourceName(), extension.getTransactionContext(), statements, typeManager.getMapper(), queryExecutor);
         var schema = Files.readString(Paths.get("./docs/schema.sql"));
         extension.runQuery(schema);
     }
 
     @AfterEach
-    void tearDown(PostgresqlStoreSetupExtension extension) throws SQLException {
+    void tearDown(PostgresqlStoreSetupExtension extension) {
         extension.runQuery("DROP TABLE " + statements.getContractDefinitionTable() + " CASCADE");
     }
 
     @Test
     @DisplayName("Context Loads, tables exist")
-    void contextLoads(PostgresqlStoreSetupExtension extension) {
+    void contextLoads(PostgresqlStoreSetupExtension extension, QueryExecutor queryExecutor) {
         var query = String.format("SELECT 1 FROM %s", statements.getContractDefinitionTable());
 
-        var result = executeQuery(extension.getConnection(), query);
+        var result = queryExecutor.executeQuery(extension.getConnection(), query);
 
         assertThat(result).isNotNull();
     }

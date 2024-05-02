@@ -19,6 +19,7 @@ import org.eclipse.edc.connector.dataplane.selector.spi.instance.DataPlaneInstan
 import org.eclipse.edc.connector.dataplane.selector.spi.store.DataPlaneInstanceStore;
 import org.eclipse.edc.connector.dataplane.selector.store.sql.schema.DataPlaneInstanceStatements;
 import org.eclipse.edc.spi.persistence.EdcPersistenceException;
+import org.eclipse.edc.sql.QueryExecutor;
 import org.eclipse.edc.sql.store.AbstractSqlStore;
 import org.eclipse.edc.transaction.datasource.spi.DataSourceRegistry;
 import org.eclipse.edc.transaction.spi.TransactionContext;
@@ -30,9 +31,6 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-import static org.eclipse.edc.sql.SqlQueryExecutor.executeQuery;
-import static org.eclipse.edc.sql.SqlQueryExecutor.executeQuerySingle;
-
 /**
  * SQL store implementation of {@link DataPlaneInstanceStore}
  */
@@ -40,8 +38,8 @@ public class SqlDataPlaneInstanceStore extends AbstractSqlStore implements DataP
 
     private final DataPlaneInstanceStatements statements;
 
-    public SqlDataPlaneInstanceStore(DataSourceRegistry dataSourceRegistry, String dataSourceName, TransactionContext transactionContext, DataPlaneInstanceStatements statements, ObjectMapper objectMapper) {
-        super(dataSourceRegistry, dataSourceName, transactionContext, objectMapper);
+    public SqlDataPlaneInstanceStore(DataSourceRegistry dataSourceRegistry, String dataSourceName, TransactionContext transactionContext, DataPlaneInstanceStatements statements, ObjectMapper objectMapper, QueryExecutor queryExecutor) {
+        super(dataSourceRegistry, dataSourceName, transactionContext, objectMapper, queryExecutor);
         this.statements = Objects.requireNonNull(statements);
     }
 
@@ -97,7 +95,7 @@ public class SqlDataPlaneInstanceStore extends AbstractSqlStore implements DataP
     public Stream<DataPlaneInstance> getAll() {
         try {
             var sql = statements.getAllTemplate();
-            return executeQuery(getConnection(), true, this::mapResultSet, sql);
+            return queryExecutor.executeQuery(getConnection(), true, this::mapResultSet, sql);
         } catch (SQLException exception) {
             throw new EdcPersistenceException(exception);
         }
@@ -106,17 +104,17 @@ public class SqlDataPlaneInstanceStore extends AbstractSqlStore implements DataP
 
     private DataPlaneInstance findByIdInternal(Connection connection, String id) {
         var sql = statements.getFindByIdTemplate();
-        return executeQuerySingle(connection, false, this::mapResultSet, sql, id);
+        return queryExecutor.executeQuerySingle(connection, false, this::mapResultSet, sql, id);
     }
 
     private void insert(Connection connection, DataPlaneInstance instance) {
         var sql = statements.getInsertTemplate();
-        executeQuery(connection, sql, instance.getId(), toJson(instance));
+        queryExecutor.executeQuery(connection, sql, instance.getId(), toJson(instance));
     }
 
     private void update(Connection connection, DataPlaneInstance instance) {
         var sql = statements.getUpdateTemplate();
-        executeQuery(connection, sql, toJson(instance), instance.getId());
+        queryExecutor.executeQuery(connection, sql, toJson(instance), instance.getId());
     }
 
 

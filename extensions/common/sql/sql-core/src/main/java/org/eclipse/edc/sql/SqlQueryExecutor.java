@@ -34,19 +34,20 @@ import static java.util.stream.StreamSupport.stream;
 /**
  * The SqlQueryExecutor is capable of executing parametrized SQL queries
  */
-public final class SqlQueryExecutor {
+public class SqlQueryExecutor implements QueryExecutor {
 
-    private SqlQueryExecutor() {
+    private final SqlQueryExecutorConfiguration configuration;
+
+    public SqlQueryExecutor() {
+        this(new SqlQueryExecutorConfiguration());
     }
 
-    /**
-     * Intended for mutating queries.
-     *
-     * @param sql the parametrized sql query
-     * @param arguments the parameters to interpolate with the parametrized sql query
-     * @return rowsChanged
-     */
-    public static int executeQuery(Connection connection, String sql, Object... arguments) {
+    public SqlQueryExecutor(SqlQueryExecutorConfiguration configuration) {
+        this.configuration = configuration;
+    }
+
+    @Override
+    public int executeQuery(Connection connection, String sql, Object... arguments) {
         Objects.requireNonNull(connection, "connection");
         Objects.requireNonNull(sql, "sql");
         Objects.requireNonNull(arguments, "arguments");
@@ -59,26 +60,15 @@ public final class SqlQueryExecutor {
         }
     }
 
-    public static <T> T executeQuerySingle(Connection connection, boolean closeConnection, ResultSetMapper<T> resultSetMapper, String sql, Object... arguments) {
+    @Override
+    public <T> T executeQuerySingle(Connection connection, boolean closeConnection, ResultSetMapper<T> resultSetMapper, String sql, Object... arguments) {
         try (var stream = executeQuery(connection, closeConnection, resultSetMapper, sql, arguments)) {
             return stream.findFirst().orElse(null);
         }
     }
 
-    /**
-     * Intended for reading queries.
-     * The resulting {@link Stream} must be closed with the "close()" when a terminal operation is used on the stream
-     * (collect, forEach, anyMatch, etc...)
-     *
-     * @param connection the connection to be used to execute the query.
-     * @param closeConnection if true the connection will be closed on stream closure, else it won't be closed.
-     * @param resultSetMapper able to map a row to an object e.g. pojo.
-     * @param sql the parametrized sql query
-     * @param arguments the parameteres to interpolate with the parametrized sql query
-     * @param <T> generic type returned after mapping from the executed query
-     * @return a Stream on the results, must be closed when a terminal operation is used on the stream (collect, forEach, anyMatch, etc...)
-     */
-    public static <T> Stream<T> executeQuery(Connection connection, boolean closeConnection, ResultSetMapper<T> resultSetMapper, String sql, Object... arguments) {
+    @Override
+    public <T> Stream<T> executeQuery(Connection connection, boolean closeConnection, ResultSetMapper<T> resultSetMapper, String sql, Object... arguments) {
         Objects.requireNonNull(connection, "connection");
         Objects.requireNonNull(resultSetMapper, "resultSetMapper");
         Objects.requireNonNull(sql, "sql");
@@ -109,7 +99,7 @@ public final class SqlQueryExecutor {
     }
 
     @NotNull
-    private static <T> Spliterators.AbstractSpliterator<T> createSpliterator(ResultSetMapper<T> resultSetMapper, ResultSet resultSet) {
+    private <T> Spliterators.AbstractSpliterator<T> createSpliterator(ResultSetMapper<T> resultSetMapper, ResultSet resultSet) {
         return new Spliterators.AbstractSpliterator<T>(Long.MAX_VALUE, Spliterator.ORDERED) {
             @Override
             public boolean tryAdvance(Consumer<? super T> action) {
@@ -127,14 +117,14 @@ public final class SqlQueryExecutor {
         };
     }
 
-    private static void setArguments(PreparedStatement statement, Object[] arguments) throws SQLException {
+    private void setArguments(PreparedStatement statement, Object[] arguments) throws SQLException {
         for (int index = 0; index < arguments.length; index++) {
             int position = index + 1;
             setArgument(statement, position, arguments[index]);
         }
     }
 
-    private static void setArgument(PreparedStatement statement, int position, Object argument) throws SQLException {
+    private void setArgument(PreparedStatement statement, int position, Object argument) throws SQLException {
         var argumentHandler = Arrays.stream(ArgumentHandlers.values()).filter(it -> it.accepts(argument))
                 .findFirst().orElse(null);
 

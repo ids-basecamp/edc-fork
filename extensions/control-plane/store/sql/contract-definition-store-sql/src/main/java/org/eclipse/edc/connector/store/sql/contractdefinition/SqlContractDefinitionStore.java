@@ -25,6 +25,7 @@ import org.eclipse.edc.connector.store.sql.contractdefinition.schema.ContractDef
 import org.eclipse.edc.spi.asset.AssetSelectorExpression;
 import org.eclipse.edc.spi.persistence.EdcPersistenceException;
 import org.eclipse.edc.spi.query.QuerySpec;
+import org.eclipse.edc.sql.QueryExecutor;
 import org.eclipse.edc.sql.store.AbstractSqlStore;
 import org.eclipse.edc.transaction.datasource.spi.DataSourceRegistry;
 import org.eclipse.edc.transaction.spi.TransactionContext;
@@ -39,15 +40,13 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
-import static org.eclipse.edc.sql.SqlQueryExecutor.executeQuery;
-import static org.eclipse.edc.sql.SqlQueryExecutor.executeQuerySingle;
 
 public class SqlContractDefinitionStore extends AbstractSqlStore implements ContractDefinitionStore {
 
     private final ContractDefinitionStatements statements;
 
-    public SqlContractDefinitionStore(DataSourceRegistry dataSourceRegistry, String dataSourceName, TransactionContext transactionContext, ContractDefinitionStatements statements, ObjectMapper objectMapper) {
-        super(dataSourceRegistry, dataSourceName, transactionContext, objectMapper);
+    public SqlContractDefinitionStore(DataSourceRegistry dataSourceRegistry, String dataSourceName, TransactionContext transactionContext, ContractDefinitionStatements statements, ObjectMapper objectMapper, QueryExecutor queryExecutor) {
+        super(dataSourceRegistry, dataSourceName, transactionContext, objectMapper, queryExecutor);
         this.statements = statements;
     }
 
@@ -58,7 +57,7 @@ public class SqlContractDefinitionStore extends AbstractSqlStore implements Cont
 
             try {
                 var queryStmt = statements.createQuery(spec);
-                return executeQuery(getConnection(), true, this::mapResultSet, queryStmt.getQueryAsString(), queryStmt.getParameters());
+                return queryExecutor.executeQuery(getConnection(), true, this::mapResultSet, queryStmt.getQueryAsString(), queryStmt.getParameters());
             } catch (SQLException exception) {
                 throw new EdcPersistenceException(exception);
             }
@@ -113,7 +112,7 @@ public class SqlContractDefinitionStore extends AbstractSqlStore implements Cont
             try (var connection = getConnection()) {
                 var entity = findById(connection, id);
                 if (entity != null) {
-                    executeQuery(connection, statements.getDeleteByIdTemplate(), id);
+                    queryExecutor.executeQuery(connection, statements.getDeleteByIdTemplate(), id);
                 }
                 return entity;
             } catch (Exception e) {
@@ -136,7 +135,7 @@ public class SqlContractDefinitionStore extends AbstractSqlStore implements Cont
 
     private void insertInternal(Connection connection, ContractDefinition definition) {
         transactionContext.execute(() -> {
-            executeQuery(connection, statements.getInsertTemplate(),
+            queryExecutor.executeQuery(connection, statements.getInsertTemplate(),
                     definition.getId(),
                     definition.getAccessPolicyId(),
                     definition.getContractPolicyId(),
@@ -153,7 +152,7 @@ public class SqlContractDefinitionStore extends AbstractSqlStore implements Cont
                 throw new EdcPersistenceException(format("Cannot update. Contract Definition with ID '%s' does not exist.", definition.getId()));
             }
 
-            executeQuery(connection, statements.getUpdateTemplate(),
+            queryExecutor.executeQuery(connection, statements.getUpdateTemplate(),
                     definition.getId(),
                     definition.getAccessPolicyId(),
                     definition.getContractPolicyId(),
@@ -168,7 +167,7 @@ public class SqlContractDefinitionStore extends AbstractSqlStore implements Cont
 
     private boolean existsById(Connection connection, String definitionId) {
         var sql = statements.getCountTemplate();
-        try (var stream = executeQuery(connection, false, this::mapCount, sql, definitionId)) {
+        try (var stream = queryExecutor.executeQuery(connection, false, this::mapCount, sql, definitionId)) {
             return stream.findFirst().orElse(0L) > 0;
         }
     }
@@ -179,7 +178,7 @@ public class SqlContractDefinitionStore extends AbstractSqlStore implements Cont
 
     private ContractDefinition findById(Connection connection, String id) {
         var sql = statements.getFindByTemplate();
-        return executeQuerySingle(connection, false, this::mapResultSet, sql, id);
+        return queryExecutor.executeQuerySingle(connection, false, this::mapResultSet, sql, id);
     }
 
 }

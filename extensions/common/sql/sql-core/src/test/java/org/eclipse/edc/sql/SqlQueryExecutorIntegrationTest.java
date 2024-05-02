@@ -34,6 +34,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 public class SqlQueryExecutorIntegrationTest {
 
     private Connection connection;
+    private final SqlQueryExecutor executor = new SqlQueryExecutor();
 
     @BeforeEach
     void setUp() throws SQLException {
@@ -53,7 +54,7 @@ public class SqlQueryExecutorIntegrationTest {
         ResultSetMapper<Long> mapper = (rs) -> rs.getLong(1);
         var sql = "SELECT 1;";
 
-        var result = SqlQueryExecutor.executeQuery(connection, false, mapper, sql);
+        var result = executor.executeQuery(connection, false, mapper, sql);
 
         assertThat(result).isNotNull().hasSize(1).contains(1L); // assert stream closes the stream
         assertThat(connection.isClosed()).isFalse();
@@ -64,7 +65,7 @@ public class SqlQueryExecutorIntegrationTest {
         ResultSetMapper<Long> mapper = (rs) -> rs.getLong(1);
         var sql = "SELECT 1;";
 
-        var result = SqlQueryExecutor.executeQuery(connection, true, mapper, sql);
+        var result = executor.executeQuery(connection, true, mapper, sql);
 
         assertThat(result).isNotNull().hasSize(1).contains(1L); // assert stream closes the stream
         assertThat(connection.isClosed()).isTrue();
@@ -72,15 +73,15 @@ public class SqlQueryExecutorIntegrationTest {
 
     @Test
     void executeQuerySingle() {
-        SqlQueryExecutor.executeQuery(connection, "CREATE TABLE test (data VARCHAR(80) primary key not null);");
-        SqlQueryExecutor.executeQuery(connection, "INSERT INTO test values ('value');");
+        executor.executeQuery(connection, "CREATE TABLE test (data VARCHAR(80) primary key not null);");
+        executor.executeQuery(connection, "INSERT INTO test values ('value');");
         var sql = "SELECT data FROM test WHERE data = ?";
         ResultSetMapper<String> mapper = rs -> rs.getString(1);
 
-        var found = SqlQueryExecutor.executeQuerySingle(connection, false, mapper, sql, "value");
+        var found = executor.executeQuerySingle(connection, false, mapper, sql, "value");
         assertThat(found).isEqualTo("value");
 
-        var notFound = SqlQueryExecutor.executeQuerySingle(connection, false, mapper, sql, "any other");
+        var notFound = executor.executeQuerySingle(connection, false, mapper, sql, "any other");
         assertThat(notFound).isEqualTo(null);
     }
 
@@ -89,19 +90,19 @@ public class SqlQueryExecutorIntegrationTest {
         var table = "kv_testTransactionAndResultSetMapper";
         var kv = new Kv(UUID.randomUUID().toString(), UUID.randomUUID().toString());
 
-        SqlQueryExecutor.executeQuery(connection, getTableSchema(table));
-        SqlQueryExecutor.executeQuery(connection, format("INSERT INTO %s (k, v) values (?, ?)", table), kv.key, kv.value);
+        executor.executeQuery(connection, getTableSchema(table));
+        executor.executeQuery(connection, format("INSERT INTO %s (k, v) values (?, ?)", table), kv.key, kv.value);
 
-        var countResult = SqlQueryExecutor.executeQuery(connection, false, (rs) -> rs.getInt(1), format("SELECT COUNT(*) FROM %s", table));
+        var countResult = executor.executeQuery(connection, false, (rs) -> rs.getInt(1), format("SELECT COUNT(*) FROM %s", table));
         assertThat(countResult).hasSize(1).first().isEqualTo(1);
 
-        var kvs = SqlQueryExecutor.executeQuery(connection, false, (rs) -> new Kv(rs.getString(1), rs.getString(2)), format("SELECT * FROM %s", table));
+        var kvs = executor.executeQuery(connection, false, (rs) -> new Kv(rs.getString(1), rs.getString(2)), format("SELECT * FROM %s", table));
         assertThat(kvs).hasSize(1).first().isEqualTo(kv);
     }
 
     @Test
     void testInvalidSql() {
-        assertThatThrownBy(() -> SqlQueryExecutor.executeQuery(connection, "Lorem ipsum dolor sit amet")).isInstanceOf(EdcPersistenceException.class);
+        assertThatThrownBy(() -> executor.executeQuery(connection, "Lorem ipsum dolor sit amet")).isInstanceOf(EdcPersistenceException.class);
     }
 
     private String getTableSchema(String tableName) {

@@ -17,6 +17,7 @@ package org.eclipse.edc.sql.lease;
 
 import org.eclipse.edc.junit.annotations.PostgresqlDbIntegrationTest;
 import org.eclipse.edc.sql.ResultSetMapper;
+import org.eclipse.edc.sql.SqlQueryExecutor;
 import org.eclipse.edc.sql.testfixtures.PostgresqlLocalInstance;
 import org.eclipse.edc.transaction.spi.NoopTransactionContext;
 import org.eclipse.edc.transaction.spi.TransactionContext;
@@ -39,7 +40,6 @@ import javax.sql.DataSource;
 
 import static java.time.ZoneOffset.UTC;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.eclipse.edc.sql.SqlQueryExecutor.executeQuery;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
@@ -57,6 +57,7 @@ class PostgresLeaseContextTest extends LeaseContextTest {
     private final Connection connection = spy(PostgresqlLocalInstance.getTestConnection());
     private SqlLeaseContextBuilder builder;
     private SqlLeaseContext leaseContext;
+    private final SqlQueryExecutor queryExecutor = new SqlQueryExecutor();
 
     @BeforeAll
     static void prepare() {
@@ -69,17 +70,17 @@ class PostgresLeaseContextTest extends LeaseContextTest {
         doNothing().when(connection).close();
 
         var schema = Files.readString(Paths.get("./src/test/resources/schema.sql"));
-        transactionContext.execute(() -> executeQuery(connection, schema));
+        transactionContext.execute(() -> queryExecutor.executeQuery(connection, schema));
 
-        builder = SqlLeaseContextBuilder.with(transactionContext, LEASE_HOLDER, dialect, Clock.fixed(now, UTC));
+        builder = SqlLeaseContextBuilder.with(transactionContext, LEASE_HOLDER, dialect, Clock.fixed(now, UTC), queryExecutor);
         leaseContext = createLeaseContext(LEASE_HOLDER);
     }
 
     @AfterEach
     void teardown() throws SQLException {
         transactionContext.execute(() -> {
-            executeQuery(connection, "DROP TABLE " + dialect.getLeaseTableName() + " CASCADE");
-            executeQuery(connection, "DROP TABLE " + dialect.getEntityTableName() + " CASCADE");
+            queryExecutor.executeQuery(connection, "DROP TABLE " + dialect.getLeaseTableName() + " CASCADE");
+            queryExecutor.executeQuery(connection, "DROP TABLE " + dialect.getEntityTableName() + " CASCADE");
         });
         doCallRealMethod().when(connection).close();
         connection.close();
@@ -107,7 +108,7 @@ class PostgresLeaseContextTest extends LeaseContextTest {
 
         // should acquire lease by deleting old one after lease expiry
         var twoMinutesAheadClock = Clock.offset(Clock.fixed(now, UTC), Duration.of(2, ChronoUnit.MINUTES));
-        var twoMinutesAheadBuilder = SqlLeaseContextBuilder.with(transactionContext, LEASE_HOLDER, dialect, twoMinutesAheadClock);
+        var twoMinutesAheadBuilder = SqlLeaseContextBuilder.with(transactionContext, LEASE_HOLDER, dialect, twoMinutesAheadClock, queryExecutor);
         var twoMinutesAheadContext = twoMinutesAheadBuilder.by("someone-else").withConnection(connection);
         twoMinutesAheadContext.acquireLease(entityId);
 
@@ -140,7 +141,7 @@ class PostgresLeaseContextTest extends LeaseContextTest {
     protected void insertTestEntity(String id) {
         transactionContext.execute(() -> {
             var stmt = "INSERT INTO " + dialect.getEntityTableName() + " (id) VALUES (?);";
-            executeQuery(connection, stmt, id);
+            queryExecutor.executeQuery(connection, stmt, id);
         });
     }
 
@@ -149,7 +150,7 @@ class PostgresLeaseContextTest extends LeaseContextTest {
         return transactionContext.execute(() -> {
             var stmt = "SELECT * FROM " + dialect.getEntityTableName() + " WHERE id=?";
 
-            try (var stream = executeQuery(connection, false, map(), stmt, id)) {
+            try (var stream = queryExecutor.executeQuery(connection, false, map(), stmt, id)) {
                 return stream.findFirst().orElse(null);
             }
         });
